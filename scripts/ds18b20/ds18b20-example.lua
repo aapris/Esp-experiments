@@ -15,8 +15,7 @@ function read_ds18b20()
             addr:byte(1),addr:byte(2),addr:byte(3),addr:byte(4),
             addr:byte(5),addr:byte(6),addr:byte(7),addr:byte(8))
         local temp = t.read(addrs[i],t.C)
-        print(s)
-        print("Sensor ("..i.."): "..temp.."'C")
+        print("Sensor ("..s.."): "..temp.."'C")
         data[s] = temp
     end
     -- Release modile after use
