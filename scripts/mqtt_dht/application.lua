@@ -16,22 +16,56 @@ local function send_ping()
     m:publish(config.ENDPOINT .. "ping","id=" .. config.ID,0,0)
 end
 
--- Sends temp + hum
-local function send_sensordata()
-    status,temp,humi,temp_decimial,humi_decimial = dht.read(2)
+local function read_dht22(pin)
+    local data = {}
+    local status,temp,hum,temp_decimial,humi_decimial = dht.read(pin)
+    data["status"] = status
     if( status == dht.OK ) then
-        print("temp: "..temp.." deg C")
-        print("humi: "..humi.."%")
+        data["temp"] = temp
+        data["humi"] = hum
     elseif( status == dht.ERROR_CHECKSUM ) then
         print( "DHT Checksum error" )
-        temp = -1000 --TEST
     elseif( status == dht.ERROR_TIMEOUT ) then
         print( "DHT Time out" )
-        temp = -2000 --TEST
+    end
+    return data
+end
+
+function read_ds18b20(pin)
+    local t = require("ds18b20")
+    t.setup(pin)
+    local addrs = t.addrs()
+    local data = {}
+    if (addrs ~= nil) then
+      print("Total DS18B20 sensors: "..table.getn(addrs))
+    end
+
+    for i=1,table.getn(addrs) do
+        local addr = addrs[i]
+        local s = string.format("DS%02x-%02x%02x%02x%02x%02x%02x%02x",
+            addr:byte(1),addr:byte(2),addr:byte(3),addr:byte(4),
+            addr:byte(5),addr:byte(6),addr:byte(7),addr:byte(8))
+        local temp = t.read(addrs[i],t.C)
+        print("Sensor ("..s.."): "..temp.."'C")
+        data[s] = temp
+    end
+    -- Release modile after use
+    t = nil
+    package.loaded["ds18b20"]=nil
+    return data
+end
+
+
+-- Send DHT22 temp + hum and Dallas temperatures
+local function send_sensordata()
+    local dht_data = read_dht22(1) -- read the only DHT22
+    data["temp"] = dht_data["temp"]
+    data["humi"] = dht_data["humi"]
+    local ds_data = read_ds18b20(2)  -- read all 18b20 sensors
+    for key,value in pairs(ds_data) do
+        data[key] = value
     end
     data["rssi"] = wifi.sta.getrssi()
-    data["temp"] = temp
-    data["humi"] = humi
     data["uptime"] = tmr.time()
     -- Send boot reason for first 100 seconds
     if data["uptime"] < 100 then
@@ -68,6 +102,8 @@ local function mqtt_start()
     -- Connect to broker
     m:connect(config.HOST, config.PORT, 0, 1, function(con) 
         register_myself()
+        send_ping()
+        send_sensordata()
         -- And then pings each 10 000 milliseconds
         tmr.stop(6)
         tmr.alarm(6, config.PING_INTERVAL, 1, send_ping)
