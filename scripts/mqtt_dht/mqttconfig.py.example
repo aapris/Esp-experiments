@@ -1,0 +1,3 @@
+MQTT_SERVER_ADDR = 'example.org'
+MQTT_USERNAME = 'user'
+MQTT_PASSWORD = 'pass'

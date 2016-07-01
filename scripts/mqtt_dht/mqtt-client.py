@@ -1,7 +1,8 @@
 import paho.mqtt.client as mqtt
 import datetime
 import json
-
+import sys
+import os
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -16,18 +17,23 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     if msg.topic == 'nodemcu/sensor':
         msg_data = json.loads(msg.payload)
-        msg_data['timestamp'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        now = datetime.datetime.utcnow()
+        msg_data['timestamp'] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
         print(msg_data)
-        with open('mqtt.log', 'at') as f:
+        fname = 'mqtt-{}.log'.format(now.strftime('%Y%m%d'))
+        fname = os.path.join(sys.argv[1], fname)
+        with open(fname, 'at') as f:
             f.write(json.dumps(msg_data) + '\n')
     else:
         print(msg.topic+" "+str(msg.payload))
 
+from mqttconfig import MQTT_SERVER_ADDR, MQTT_USERNAME, MQTT_PASSWORD
+
 client = mqtt.Client()
+client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 client.on_connect = on_connect
 client.on_message = on_message
 
-MQTT_SERVER_ADDR = '192.168.0.40'
 client.connect(MQTT_SERVER_ADDR, 1883, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and
