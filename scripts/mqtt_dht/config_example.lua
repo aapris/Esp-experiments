@@ -4,9 +4,9 @@
 
 local module = {}
 
-module.SSID = {}
-module.SSID["myWifi"] = "12345679ABCDEF"
-module.HOST = "broker.example.com"  
+module.WIFI_SSID = "myWifi"
+module.WIFI_PASS = "12345679ABCDEF"
+module.HOST = "broker.example.com"
 module.PORT = 1883
 module.ID = node.chipid()
 module.USER = "esp"
