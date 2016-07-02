@@ -5,7 +5,6 @@ temp = 0
 humi = 0
 data = {}
 data["protocol"] = '1.0'
-data["ssid"] = config.WIFI_SSID
 data["mac"] = wifi.sta.getmac()
 data["chipid"] = node.chipid()
 
@@ -93,6 +92,7 @@ end
 
 local function mqtt_start()  
     m = mqtt.Client(config.ID, 120, config.USER, config.PASSWORD)
+    data["ssid"] = config.WIFI_SSID
     -- register message callback beforehand
     m:on("message", function(conn, topic, data) 
       if data ~= nil then
