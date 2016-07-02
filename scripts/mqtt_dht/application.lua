@@ -4,7 +4,8 @@ m = nil
 temp = 0
 humi = 0
 data = {}
-data["ssid"] = wifi_SSID
+data["protocol"] = '1.0'
+data["ssid"] = config.WIFI_SSID
 data["mac"] = wifi.sta.getmac()
 data["chipid"] = node.chipid()
 
