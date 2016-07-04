@@ -80,8 +80,33 @@ local function send_sensordata()
     -- node.info()
     local ok, msg = pcall(cjson.encode, data)
     print(msg)
+    -- remove sensor keys from global data variable
+    data["temp"] = nil
+    data["humi"] = nil
+    data["rssi"] = nil
+    data["uptime"] = nil
+    for key,value in pairs(ds_data) do
+        data[key] = nil
+    end
     m:publish(config.ENDPOINT .. "sensor",msg,0,0)
 end
+
+
+-- Send button press
+local function send_buttonpress()
+    data["rssi"] = wifi.sta.getrssi()
+    data["uptime"] = tmr.time()
+    data["node_heap"] = node.heap() -- Returns the current available heap size in bytes.
+    data["event"] = "button_press"
+    local ok, msg = pcall(cjson.encode, data)
+    print(msg)
+    data["rssi"] = nil
+    data["uptime"] = nil
+    data["event"] = nil
+    -- this should be really event endpoint or something
+    m:publish(config.ENDPOINT .. "sensor",msg,0,0)
+end
+
 
 -- Sends my id to the broker for registration
 local function register_myself()  
@@ -114,11 +139,36 @@ local function mqtt_start()
     end)
 end
 
+--button.lua
+buttonPin = 4 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
+gpio.mode(buttonPin,gpio.INT,gpio.PULLUP)
+
+function debounce (func)
+    local last = 0
+    local delay = 200000
+
+    return function (...)
+        local now = tmr.now()
+        if now - last < delay then return end
+
+        last = now
+        return func(...)
+    end
+end
+
+function onChange()
+    if gpio.read(buttonPin) == 0 then
+        print("Button pressed!")
+        send_buttonpress()
+        tmr.delay(500000)
+    end
+end
+
 
 function module.start()
+  gpio.trig(buttonPin,"down", debounce(onChange))
   print("mqtt_start()")
   mqtt_start()
 end
 
 return module
-
