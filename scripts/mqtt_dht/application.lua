@@ -4,7 +4,7 @@ m = nil
 temp = 0
 humi = 0
 data = {}
-data["ssid"] = wifi_SSID
+data["protocol"] = '1.0'
 data["mac"] = wifi.sta.getmac()
 data["chipid"] = node.chipid()
 
@@ -80,8 +80,33 @@ local function send_sensordata()
     -- node.info()
     local ok, msg = pcall(cjson.encode, data)
     print(msg)
+    -- remove sensor keys from global data variable
+    data["temp"] = nil
+    data["humi"] = nil
+    data["rssi"] = nil
+    data["uptime"] = nil
+    for key,value in pairs(ds_data) do
+        data[key] = nil
+    end
     m:publish(config.ENDPOINT .. "sensor",msg,0,0)
 end
+
+
+-- Send button press
+local function send_buttonpress()
+    data["rssi"] = wifi.sta.getrssi()
+    data["uptime"] = tmr.time()
+    data["node_heap"] = node.heap() -- Returns the current available heap size in bytes.
+    data["event"] = "button_press"
+    local ok, msg = pcall(cjson.encode, data)
+    print(msg)
+    data["rssi"] = nil
+    data["uptime"] = nil
+    data["event"] = nil
+    -- this should be really event endpoint or something
+    m:publish(config.ENDPOINT .. "sensor",msg,0,0)
+end
+
 
 -- Sends my id to the broker for registration
 local function register_myself()  
@@ -92,6 +117,7 @@ end
 
 local function mqtt_start()  
     m = mqtt.Client(config.ID, 120, config.USER, config.PASSWORD)
+    data["ssid"] = config.WIFI_SSID
     -- register message callback beforehand
     m:on("message", function(conn, topic, data) 
       if data ~= nil then
@@ -113,11 +139,40 @@ local function mqtt_start()
     end)
 end
 
+--button.lua
+buttonPin = 4 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
+local debounceDelay = 50
+local debounceAlarmId = 1
+gpio.mode(buttonPin,gpio.INT,gpio.PULLUP)
+
+function buttonPressed()
+    -- don't react to any interupts from now on and wait 50ms until the interrupt for the up event is enabled
+    -- within that 50ms the switch may bounce to its heart's content
+    gpio.trig(buttonPin, "none")
+    tmr.alarm(debounceAlarmId, debounceDelay, tmr.ALARM_SINGLE, function()
+        gpio.trig(buttonPin, "up", buttonReleased)
+    end)
+    -- finally react to the down event
+    print("Button pressed")
+    send_buttonpress()
+end
+
+function buttonReleased()
+    -- don't react to any interupts from now on and wait 50ms until the interrupt for the down event is enabled
+    -- within that 50ms the switch may bounce to its heart's content
+    gpio.trig(buttonPin, "none")
+    tmr.alarm(debounceAlarmId, debounceDelay, tmr.ALARM_SINGLE, function()
+        gpio.trig(buttonPin, "down", buttonPressed)
+    end)
+    -- finally react to the up event
+    print("Button released")
+end
+
 
 function module.start()
+  gpio.trig(buttonPin, "down", buttonPressed)
   print("mqtt_start()")
   mqtt_start()
 end
 
 return module
-

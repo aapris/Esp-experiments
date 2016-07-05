@@ -18,9 +18,11 @@ end
 local function wifi_start(list_aps)
     if list_aps then
         for key,value in pairs(list_aps) do
-            if config.SSID and config.SSID[key] then
+--            if config.SSID and config.SSID[key] then
+            if config.WIFI_SSID and config.WIFI_SSID == key and config.WIFI_PASS then
                 wifi.setmode(wifi.STATION);
-                wifi.sta.config(key,config.SSID[key])
+--                wifi.sta.config(key,config.SSID[key])
+                wifi.sta.config(key,config.WIFI_PASS)
                 wifi.sta.connect()
                 print("Connecting to " .. key .. " ...")
                 --config.SSID = nil  -- can save memory
@@ -33,7 +35,7 @@ local function wifi_start(list_aps)
 end
 
 function module.start()  
-  print("Configuring Wifi ...")
+  print("Configuring Wifi: "..config.WIFI_SSID)
   wifi.setmode(wifi.STATION);
   wifi.sta.getap(wifi_start)
 end
