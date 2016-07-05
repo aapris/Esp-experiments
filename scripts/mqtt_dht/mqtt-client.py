@@ -15,12 +15,14 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    if msg.topic == 'nodemcu/sensor':
+    #if msg.topic == 'nodemcu/sensor':
+    if msg.topic in ['nodemcu/sensor', 'nodemcu/event']:
+        channel = msg.topic.split('/')[1]
         msg_data = json.loads(msg.payload)
         now = datetime.datetime.utcnow()
         msg_data['timestamp'] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
         print(msg_data)
-        fname = 'mqtt-{}.log'.format(now.strftime('%Y%m%d'))
+        fname = 'mqtt-{}-{}.log'.format(now.strftime('%Y%m%d'), channel)
         fname = os.path.join(sys.argv[1], fname)
         with open(fname, 'at') as f:
             f.write(json.dumps(msg_data) + '\n')
