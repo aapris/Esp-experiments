@@ -141,32 +141,36 @@ end
 
 --button.lua
 buttonPin = 4 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
+local debounceDelay = 50
+local debounceAlarmId = 1
 gpio.mode(buttonPin,gpio.INT,gpio.PULLUP)
 
-function debounce (func)
-    local last = 0
-    local delay = 200000
-
-    return function (...)
-        local now = tmr.now()
-        if now - last < delay then return end
-
-        last = now
-        return func(...)
-    end
+function buttonPressed()
+    -- don't react to any interupts from now on and wait 50ms until the interrupt for the up event is enabled
+    -- within that 50ms the switch may bounce to its heart's content
+    gpio.trig(buttonPin, "none")
+    tmr.alarm(debounceAlarmId, debounceDelay, tmr.ALARM_SINGLE, function()
+        gpio.trig(buttonPin, "up", buttonReleased)
+    end)
+    -- finally react to the down event
+    print("Button pressed")
+    send_buttonpress()
 end
 
-function onChange()
-    if gpio.read(buttonPin) == 0 then
-        print("Button pressed!")
-        send_buttonpress()
-        tmr.delay(500000)
-    end
+function buttonReleased()
+    -- don't react to any interupts from now on and wait 50ms until the interrupt for the down event is enabled
+    -- within that 50ms the switch may bounce to its heart's content
+    gpio.trig(buttonPin, "none")
+    tmr.alarm(debounceAlarmId, debounceDelay, tmr.ALARM_SINGLE, function()
+        gpio.trig(buttonPin, "down", buttonPressed)
+    end)
+    -- finally react to the up event
+    print("Button released")
 end
 
 
 function module.start()
-  gpio.trig(buttonPin,"down", debounce(onChange))
+  gpio.trig(buttonPin, "down", buttonPressed)
   print("mqtt_start()")
   mqtt_start()
 end
