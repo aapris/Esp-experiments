@@ -104,7 +104,7 @@ local function send_buttonpress()
     data["uptime"] = nil
     data["event"] = nil
     -- this should be really event endpoint or something
-    m:publish(config.ENDPOINT .. "sensor",msg,0,0)
+    m:publish(config.ENDPOINT .. "event",msg,0,0)
 end
 
 
