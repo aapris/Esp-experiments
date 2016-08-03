@@ -1,6 +1,7 @@
 -- inspired by: http://www.esp8266-projects.com/2015/03/buttons-pushbuttons-and-debouncing-story.html
 
-buttonPin = 4 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
+--buttonPin = 4 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
+buttonPin = 6 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
 local debounceDelay = 50
 local debounceAlarmId = 1
 gpio.mode(buttonPin, gpio.INT, gpio.PULLUP)
