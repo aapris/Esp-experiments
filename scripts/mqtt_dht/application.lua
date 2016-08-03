@@ -83,8 +83,8 @@ local function send_sensordata()
     local ok, msg = pcall(cjson.encode, data)
     print(msg)
     -- remove sensor keys from global data variable
-    data["temp"] = nil
-    data["humi"] = nil
+    data["dht22_temp"] = nil
+    data["dht22_humi"] = nil
     data["rssi"] = nil
     data["uptime"] = nil
     for key,value in pairs(ds_data) do
