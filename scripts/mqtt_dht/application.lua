@@ -4,7 +4,7 @@ m = nil
 temp = 0
 humi = 0
 data = {}
-data["protocol"] = '1.0'
+data["protocol"] = '1.0.2'
 data["mac"] = wifi.sta.getmac()
 data["chipid"] = node.chipid()
 
@@ -21,8 +21,10 @@ local function read_dht22(pin)
     local status,temp,hum,temp_decimial,humi_decimial = dht.read(pin)
     data["status"] = status
     if( status == dht.OK ) then
-        data["temp"] = temp
-        data["humi"] = hum
+        data["dht22_temp"] = temp
+        data["dht22_humi"] = hum
+        -- print("dht22_temp" .. temp)
+        -- print("dht22_humi" .. humi)
     elseif( status == dht.ERROR_CHECKSUM ) then
         print( "DHT Checksum error" )
     elseif( status == dht.ERROR_TIMEOUT ) then
@@ -59,8 +61,8 @@ end
 -- Send DHT22 temp + hum and Dallas temperatures
 local function send_sensordata()
     local dht_data = read_dht22(1) -- read the only DHT22
-    data["temp"] = dht_data["temp"]
-    data["humi"] = dht_data["humi"]
+    data["dht22_temp"] = dht_data["dht22_temp"]
+    data["dht22_humi"] = dht_data["dht22_humi"]
     local ds_data = read_ds18b20(2)  -- read all 18b20 sensors
     for key,value in pairs(ds_data) do
         data[key] = value
@@ -93,11 +95,15 @@ end
 
 
 -- Send button press
-local function send_buttonpress()
+local function send_buttonpress(direction)
     data["rssi"] = wifi.sta.getrssi()
     data["uptime"] = tmr.time()
     data["node_heap"] = node.heap() -- Returns the current available heap size in bytes.
-    data["event"] = "button_press"
+    if direction == nil then
+        direction = "button_press"
+    end
+
+    data["event"] = direction
     local ok, msg = pcall(cjson.encode, data)
     print(msg)
     data["rssi"] = nil
@@ -140,7 +146,7 @@ local function mqtt_start()
 end
 
 --button.lua
-buttonPin = 4 -- this is ESP-01 pin GPIO02 and D4 in NodeMCU dev board
+buttonPin = 6 -- this is D6 in NodeMCU dev board
 local debounceDelay = 50
 local debounceAlarmId = 1
 gpio.mode(buttonPin,gpio.INT,gpio.PULLUP)
@@ -154,7 +160,7 @@ function buttonPressed()
     end)
     -- finally react to the down event
     print("Button pressed")
-    send_buttonpress()
+    send_buttonpress("close_"..buttonPin)
 end
 
 function buttonReleased()
@@ -166,6 +172,7 @@ function buttonReleased()
     end)
     -- finally react to the up event
     print("Button released")
+    send_buttonpress("open_"..buttonPin)
 end
 
 
