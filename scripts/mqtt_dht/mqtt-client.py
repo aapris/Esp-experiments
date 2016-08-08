@@ -16,6 +16,7 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     #if msg.topic == 'nodemcu/sensor':
+    MAX_LINES = 1000
     if msg.topic in ['nodemcu/sensor', 'nodemcu/event']:
         channel = msg.topic.split('/')[1]
         msg_data = json.loads(msg.payload)
@@ -26,6 +27,18 @@ def on_message(client, userdata, msg):
         fname = os.path.join(sys.argv[1], fname)
         with open(fname, 'at') as f:
             f.write(json.dumps(msg_data) + '\n')
+        fname = '{}.log'.format(msg_data.get('chipid', 'null'))
+        fname = os.path.join(sys.argv[1], fname)
+        lines = []
+        if os.path.isfile(fname):
+            with open(fname, 'rt') as f:
+                lines = f.readlines()
+                if len(lines) > MAX_LINES:
+                    lines = lines[-MAX_LINES:]
+        lines.append(json.dumps(msg_data))
+        lines = [line.strip() for line in lines if line.strip() != '']
+        with open(fname, 'wt') as f:
+            f.write('\n'.join(lines))
     else:
         print(msg.topic+" "+str(msg.payload))
 
