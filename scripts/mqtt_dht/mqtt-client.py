@@ -23,10 +23,26 @@ def on_message(client, userdata, msg):
         now = datetime.datetime.utcnow()
         msg_data['timestamp'] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
         print(msg_data)
+        # Write all data to a log file
         fname = 'mqtt-{}-{}.log'.format(now.strftime('%Y%m%d'), channel)
         fname = os.path.join(sys.argv[1], fname)
         with open(fname, 'at') as f:
             f.write(json.dumps(msg_data) + '\n')
+        # Write last lines to a json file per logger
+        fname = '{}.json'.format(msg_data.get('chipid', 'null'))
+        fname = os.path.join(sys.argv[1], fname)
+        lines = []
+        if os.path.isfile(fname):
+            with open(fname, 'rt') as f:
+                lines = json.loads(f.read())
+                if len(lines) > MAX_LINES:
+                    lines = lines[-MAX_LINES:]
+        lines.append(msg_data)
+        with open(fname, 'wt') as f:
+            f.write(json.dumps(lines, indent=1))
+
+        # Write last MAX_LINES to a logger related file
+        # (TO BE REMOVED)
         fname = '{}.log'.format(msg_data.get('chipid', 'null'))
         fname = os.path.join(sys.argv[1], fname)
         lines = []
@@ -39,6 +55,7 @@ def on_message(client, userdata, msg):
         lines = [line.strip() for line in lines if line.strip() != '']
         with open(fname, 'wt') as f:
             f.write('\n'.join(lines))
+
     else:
         print(msg.topic+" "+str(msg.payload))
 
