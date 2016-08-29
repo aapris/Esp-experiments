@@ -3,6 +3,7 @@ import datetime
 import json
 import sys
 import os
+import shutil
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -16,7 +17,7 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     #if msg.topic == 'nodemcu/sensor':
-    MAX_LINES = 1000
+    MAX_LINES = 200
     if msg.topic in ['nodemcu/sensor', 'nodemcu/event']:
         channel = msg.topic.split('/')[1]
         msg_data = json.loads(msg.payload)
@@ -38,8 +39,11 @@ def on_message(client, userdata, msg):
                 if len(lines) > MAX_LINES:
                     lines = lines[-MAX_LINES:]
         lines.append(msg_data)
-        with open(fname, 'wt') as f:
+        #with open(fname, 'wt') as f:
+        tmpname = fname + '.tmp'
+        with open(tmpname, 'wt') as f:
             f.write(json.dumps(lines, indent=1))
+        shutil.move(tmpname, fname)
 
         # Write last MAX_LINES to a logger related file
         # (TO BE REMOVED)
