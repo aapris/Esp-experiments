@@ -30,14 +30,22 @@ def on_message(client, userdata, msg):
         with open(fname, 'at') as f:
             f.write(json.dumps(msg_data) + '\n')
         # Write last lines to a json file per logger
-        fname = '{}.json'.format(msg_data.get('chipid', 'null'))
+        fname = '{}-{}.json'.format(msg_data.get('chipid', 'null'), channel)
         fname = os.path.join(sys.argv[1], fname)
         lines = []
         if os.path.isfile(fname):
             with open(fname, 'rt') as f:
                 lines = json.loads(f.read())
-                if len(lines) > MAX_LINES:
+                if channel == 'sensor' and len(lines) > MAX_LINES:
                     lines = lines[-MAX_LINES:]
+                if channel == 'event':  # Keep only today's events
+                    new_lines = []
+                    today = now.strftime('%Y-%m-%d')
+                    for line in lines:
+                        timestamp = line.get('timestamp', None)
+                        if timestamp > today:
+                            new_lines.append(line)
+                    lines = new_lines
         lines.append(msg_data)
         #with open(fname, 'wt') as f:
         tmpname = fname + '.tmp'
