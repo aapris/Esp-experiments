@@ -4,6 +4,7 @@
 -- LICENCE: http://opensource.org/licenses/MIT
 -- Vowstar <vowstar@nodemcu.com>
 -- 2015/02/14 sza2 <sza2trash@gmail.com> Fix for negative values
+-- 2015/09/12 <aapris@gmail.com> Add read_all function
 --------------------------------------------------------------------------------
 
 -- Set module name as parameter of require
@@ -102,11 +103,11 @@ function readNumber(addr, unit)
           t = t - 65536
         end
 
-		if (addr:byte(1) == 0x28) then
-		  t = t * 625  -- DS18B20, 4 fractional bits
-		else
-		  t = t * 5000 -- DS18S20, 1 fractional bit
-		end
+        if (addr:byte(1) == 0x28) then
+          t = t * 625  -- DS18B20, 4 fractional bits
+        else
+          t = t * 5000 -- DS18S20, 1 fractional bit
+        end
 
         if(unit == nil or unit == 'C') then
           -- do nothing
@@ -137,6 +138,29 @@ function read(addr, unit)
   else
     return t
   end
+end
+
+-- Return all readings in a table
+function read_all(pin)
+    setup(pin)
+    local addrs = addrs()
+    local data = {}
+--    if (addrs ~= nil) then
+--      print("Total DS18B20 sensors: "..table.getn(addrs))
+--    end
+
+    for i=1,table.getn(addrs) do
+        local addr = addrs[i]
+        local s = string.format("DS%02x-%02x%02x%02x%02x%02x%02x%02x",
+            addr:byte(1),addr:byte(2),addr:byte(3),addr:byte(4),
+            addr:byte(5),addr:byte(6),addr:byte(7),addr:byte(8))
+        local temp = read(addrs[i],C)
+--        print("Sensor ("..s.."): "..temp.."'C")
+        data[s] = temp
+    end
+    -- Release modile after use
+--    t = nil
+    return data
 end
 
 -- Return module table
