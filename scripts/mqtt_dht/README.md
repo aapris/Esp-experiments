@@ -3,7 +3,7 @@
 ## In this directory
 ```
 export PORT=/dev/cu.wchusbserial1410 # or find the right one
-../../luatool/luatool/luatool.py --compile --port ${PORT} --src config_hima.lua --dest config.lua --verbose --baud 115200
+../../luatool/luatool/luatool.py --compile --port ${PORT} --src config_your_current_config.lua --dest config.lua --verbose --baud 115200
 ../../luatool/luatool/luatool.py --compile --port ${PORT} --src application.lua --dest application.lua --verbose --baud 115200
 ../../luatool/luatool/luatool.py --compile --port ${PORT} --src setup.lua --dest setup.lua --verbose --baud 115200
 ../../luatool/luatool/luatool.py --compile --port ${PORT} --src ../dht/dht22.lua --dest dht22.lua --verbose --baud 115200
@@ -11,9 +11,9 @@ export PORT=/dev/cu.wchusbserial1410 # or find the right one
 ../../luatool/luatool/luatool.py --port ${PORT} --src init.lua --dest t.lua --verbose --baud 115200
 ```
 
-## Run script
+## Test script
 ```
-dofile('test.lua');
+dofile('t.lua');
 ```
 
 ## Finally upload init.lua
