@@ -2,6 +2,15 @@
 
 This repository contains various ESP8266 experiments.
 
+# NOTE to databusiness.fi event (2016-09-14) participants:
+
+You can find the visualization from here:
+https://github.com/terotic/databusiness-iot
+
+If you want to use your Sensor Box (tm) you won, you need to know some programming.
+To get started:
+https://www.google.fi/#q=getting+started+esp8266
+
 ## Mac Os setup
 
 * Install drivers
