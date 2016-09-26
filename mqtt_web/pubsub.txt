@@ -1,0 +1,8 @@
+Testing with mosquitto client:
+
+Read MQTT socket:
+mosquitto_sub -h fvh.rwqr.org -p 1883 -v -t '#' -u schooliotbox_read -P iotfun
+
+Write MQTT socket:
+mosquitto_pub -h fvh.rwqr.org -p 1883 -t 'schooliotbox/event' -u schooliotbox_USER_WITH_WRITE_RIGHTS -P YOU_MUST_KNOW_PASSWORD_TOO -m '{"mac":"18:fe:34:e0:6f:81","ssid":"stadinet","protocol":"1.0.3","node_heap":19560,"rssi":-53,"uptime":92320,"event":"motion_off_7","chipid":14708609}'
+
