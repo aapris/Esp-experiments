@@ -29,6 +29,16 @@ esptool.py -p ${PORT} write_flash 0x00000 firmware/nodemcu-master-17-modules-201
 ./luatool/luatool/luatool.py --port ${PORT} --src scripts/ping-http.lua --dest init.lua --verbose --baud 115200
 ```
 
+## Esp Easy firmware
+
+```bash
+export PORT=/dev/cu.wchusbserial1410
+esptool.py -p ${PORT} write_flash 0x00000 ~/Downloads/ESPEasy_R147_RC8/ESPEasy_R147_4096.bin 
+```
+
+Remove power cable and plug it back. Then follow configuration instructions here:
+http://www.letscontrolit.com/wiki/index.php/ESPEasy#Configuration
+
 ## MQTT
 
 Lightweight protocol for IoT devices.
