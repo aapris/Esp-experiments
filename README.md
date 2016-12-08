@@ -33,7 +33,12 @@ esptool.py -p ${PORT} write_flash 0x00000 firmware/nodemcu-master-17-modules-201
 
 ```bash
 export PORT=/dev/cu.wchusbserial1410
-esptool.py -p ${PORT} write_flash 0x00000 ~/Downloads/ESPEasy_R147_RC8/ESPEasy_R147_4096.bin 
+
+#esptool.py -p ${PORT} write_flash 0x00000 ~/Downloads/ESPEasy_R147_RC8/ESPEasy_R147_4096.bin 
+
+# This might flash Wemos D1 Mini Pro?
+esptool.py -p ${PORT} write_flash -ff 80m -fm qio -fs 4m 0x00000 ~/Downloads/ESPEasy_R147_RC8/ESPEasy_R147_512.bin  0x7c000  firmware/esp_init_data_default.bin
+
 ```
 
 Remove power cable and plug it back. Then follow configuration instructions here:
